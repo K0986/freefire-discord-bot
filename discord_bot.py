@@ -3,7 +3,6 @@ from discord.ext import commands
 import os
 import logging
 import aiohttp
-from aiohttp import ClientResponseError
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -24,66 +23,26 @@ async def on_ready():
 @bot.command(name="like", help="Send a like to a Free Fire UID")
 async def like(ctx, uid: str):
     try:
-        # Send initial response
-        await ctx.send(f"Processing like request for UID: {uid}...")
-        
+        await ctx.send(f"Sending like to UID: {uid}...")
         async with aiohttp.ClientSession() as session:
             async with session.get(f"{API_URL}?uid={uid}", timeout=10) as response:
-                try:
-                    data = await response.json()
-                    logger.info(f"API response data: {data}")
-                except Exception as e:
-                    logger.error(f"Failed to parse JSON response: {str(e)}")
-                    await ctx.send("❌ Failed to parse response from API.")
+                if response.status != 200:
+                    await ctx.send(f"Failed to send like. API returned status {response.status}.")
                     return
-                
-                if response.status == 200:
-                    # Create embed for better presentation
-                    embed = discord.Embed(
-                        title="Like Request Result",
-                        description="Your like has been sent successfully!",
-                        color=discord.Color.green()
-                    )
-                    embed.add_field(name="Player", value=data.get("player", "Unknown"), inline=False)
-                    embed.add_field(name="Likes Before", value=str(data.get("likes_before", "N/A")), inline=True)
-                    embed.add_field(name="Likes After", value=str(data.get("likes_after", "N/A")), inline=True)
-                    embed.add_field(name="Likes Added", value=str(data.get("likes_added", 0)), inline=True)
-                    embed.set_footer(text=f"Server: {data.get('server_used', 'Unknown')}")
-                    embed.set_thumbnail(url="https://images.pexels.com/photos/256381/pexels-photo-256381.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940")
-                    
-                    await ctx.send(embed=embed)
+                data = await response.json()
+                if data.get("status") == 1:
+                    await ctx.send(f"👍 Like sent successfully to player {data.get('player', 'Unknown')}! Likes before: {data.get('likes_before')}, Likes after: {data.get('likes_after')}.")
+                elif data.get("status") == 2:
+                    await ctx.send(f"ℹ️ No new likes added. Player {data.get('player', 'Unknown')} already has {data.get('likes_after')} likes.")
                 else:
-                    logger.error(f"API returned error status {response.status}: {data}")
-                    await ctx.send(f"❌ Failed to like UID {uid}. Error: {data.get('message', 'Unknown error')}")
-                    
-    except ClientResponseError as e:
-        if e.status == 403:
-            logger.error(f"Permission error: {str(e)}")
-            await ctx.send("❌ Bot lacks the required permissions to perform this action. Please check the bot's permissions in your server.")
-        else:
-            logger.error(f"API request failed: {str(e)}")
-            await ctx.send(f"❌ Failed to connect to the API. Please try again later.")
-    except aiohttp.ClientError as e:
-        logger.error(f"API request failed: {str(e)}")
-        await ctx.send(f"❌ Failed to connect to the API. Please try again later.")
+                    await ctx.send(f"⚠️ Could not send like. Message: {data.get('message', 'Unknown error')}")
     except Exception as e:
-        logger.error(f"Unexpected error: {str(e)}")
-        await ctx.send(f"❌ An unexpected error occurred. Please try again later.")
-
-@bot.event
-async def on_command_error(ctx, error):
-    if isinstance(error, commands.MissingRequiredArgument):
-        await ctx.send("❌ Please provide a UID. Usage: `!like <uid>`")
-    elif isinstance(error, commands.CommandNotFound):
-        await ctx.send("❌ Command not found. Use `!like <uid>` to send likes.")
-    else:
-        logger.error(f"Command error: {str(error)}")
-        await ctx.send("❌ An error occurred while processing your command.")
+        logger.error(f"Error in like command: {str(e)}")
+        await ctx.send("❌ An error occurred while processing your request. Please try again later.")
 
 if __name__ == "__main__":
     token = os.getenv("DISCORD_BOT_TOKEN")
     if not token:
         logger.error("No Discord bot token found!")
         raise ValueError("DISCORD_BOT_TOKEN environment variable is required")
-    
     bot.run(token)

@@ -31,6 +31,7 @@ async def like(ctx, uid: str):
             async with session.get(f"{API_URL}?uid={uid}", timeout=10) as response:
                 try:
                     data = await response.json()
+                    logger.info(f"API response data: {data}")
                 except Exception as e:
                     logger.error(f"Failed to parse JSON response: {str(e)}")
                     await ctx.send("❌ Failed to parse response from API.")

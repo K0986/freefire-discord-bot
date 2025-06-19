@@ -23,7 +23,7 @@ async def on_ready():
 @bot.command(name="like", help="Send a like to a Free Fire UID")
 async def like(ctx, uid: str):
     try:
-        await ctx.send(f"ℙ𝕣𝕠𝕔𝕖𝕤𝕤𝕚𝕟𝕘 like to UID: {uid}...")
+        await ctx.send(f"Processing like to UID: {uid}...")
         async with aiohttp.ClientSession() as session:
             async with session.get(f"{API_URL}?uid={uid}", timeout=10) as response:
                 if response.status != 200:

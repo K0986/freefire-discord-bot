@@ -30,32 +30,50 @@ async def like(ctx, uid: str):
                     await ctx.send(f"Failed to send like. API returned status {response.status}.")
                     return
                 data = await response.json()
-                if data.get("status") == 1:
-                    added = data.get("likes_added", data.get("likes_after", 0) - data.get("likes_before", 0))
-                    remaining = data.get("requests_left", "?")
-                    limit = data.get("limit", "?")
-                    server = data.get("server", "Unknown")
+                status = data.get("status")
+                nickname = data.get("player", "Unknown")
+                before = data.get("likes_before", "?")
+                after = data.get("likes_after", "?")
+                added = data.get("likes_added", int(after) - int(before) if str(before).isdigit() and str(after).isdigit() else 0)
+                remaining = data.get("requests_left", "?")
+                limit = data.get("limit", "?")
+                server = data.get("server", "Unknown")
+
+                if status == 1:
                     msg = (
                         f"┌  ACCOUNT\n"
-                        f"├─ NICKNAME: {data.get('player', 'Unknown')}\n"
+                        f"├─ NICKNAME: {nickname}\n"
                         f"├─ UID: {uid}\n"
                         f"└─ RESULT:\n"
                         f"    ├─ ADDED: +{added}\n"
-                        f"    ├─ BEFORE: {data.get('likes_before')}\n"
-                        f"    └─ AFTER: {data.get('likes_after')}\n"
+                        f"    ├─ BEFORE: {before}\n"
+                        f"    └─ AFTER: {after}\n"
                         f"┌  DAILY LIMIT\n"
                         f"└─ Requests remaining: {remaining}/{limit}\n"
                         f"SERVER USED: {server}"
                     )
                     await ctx.send(f"```{msg}```")
-                elif data.get("status") == 2:
-                    await ctx.send(
-                        f"ℹ️ No new likes added. Player {data.get('player', 'Unknown')} already has {data.get('likes_after')} likes."
+
+                elif status == 2:
+                    msg = (
+                        f"┌  ACCOUNT\n"
+                        f"├─ NICKNAME: {nickname}\n"
+                        f"├─ UID: {uid}\n"
+                        f"└─ RESULT:\n"
+                        f"    ├─ ADDED: +0 (No new like)\n"
+                        f"    ├─ TOTAL LIKES: {after}\n"
+                        f"    └─ STATUS: Already liked"
                     )
+                    await ctx.send(f"```{msg}```")
+
                 else:
-                    await ctx.send(
-                        f"⚠️ Could not send like. Message: {data.get('message', 'Unknown error')}"
+                    msg = (
+                        f"┌  ERROR\n"
+                        f"├─ UID: {uid}\n"
+                        f"└─ MESSAGE: {data.get('message', 'Unknown error')}"
                     )
+                    await ctx.send(f"```{msg}```")
+
     except Exception as e:
         logger.error(f"Error in like command: {str(e)}")
         await ctx.send("❌ An error occurred while processing your request. Please try again later.")

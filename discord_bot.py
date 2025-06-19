@@ -14,7 +14,7 @@ intents.message_content = True
 bot = commands.Bot(command_prefix="!", intents=intents)
 
 # API configuration
-API_URL = "https://freefire-like-nine.vercel.app/like"
+API_URL = "https://freefire-like-nine.vercel.app"
 
 @bot.event
 async def on_ready():

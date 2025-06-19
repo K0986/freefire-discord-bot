@@ -3,6 +3,7 @@ from discord.ext import commands
 import os
 import logging
 import aiohttp
+from aiohttp import ClientResponseError
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -28,7 +29,12 @@ async def like(ctx, uid: str):
         
         async with aiohttp.ClientSession() as session:
             async with session.get(f"{API_URL}?uid={uid}", timeout=10) as response:
-                data = await response.json()
+                try:
+                    data = await response.json()
+                except Exception as e:
+                    logger.error(f"Failed to parse JSON response: {str(e)}")
+                    await ctx.send("❌ Failed to parse response from API.")
+                    return
                 
                 if response.status == 200:
                     # Create embed for better presentation
@@ -46,8 +52,16 @@ async def like(ctx, uid: str):
                     
                     await ctx.send(embed=embed)
                 else:
+                    logger.error(f"API returned error status {response.status}: {data}")
                     await ctx.send(f"❌ Failed to like UID {uid}. Error: {data.get('message', 'Unknown error')}")
                     
+    except ClientResponseError as e:
+        if e.status == 403:
+            logger.error(f"Permission error: {str(e)}")
+            await ctx.send("❌ Bot lacks the required permissions to perform this action. Please check the bot's permissions in your server.")
+        else:
+            logger.error(f"API request failed: {str(e)}")
+            await ctx.send(f"❌ Failed to connect to the API. Please try again later.")
     except aiohttp.ClientError as e:
         logger.error(f"API request failed: {str(e)}")
         await ctx.send(f"❌ Failed to connect to the API. Please try again later.")

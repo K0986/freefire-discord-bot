@@ -13,7 +13,7 @@ A Discord bot that sends likes to Free Fire profiles using the Free Fire Like AP
 1. **Prerequisites**:
    - Create a Discord bot at [Discord Developer Portal](https://discord.com/developers/applications)
    - Get your bot token
-   - Add bot to your server with required permissions
+   - Add bot to your server with required permissions (Send Messages, Embed Links, Read Message History)
 
 2. **Deploy on Railway**:
    - Fork this repository
@@ -50,3 +50,4 @@ Replace `<uid>` with the Free Fire player's UID you want to send likes to.
 - Error handling and logging
 - Automatic reconnection on failure
 - Status updates for each request
+- **Important:** Ensure the bot has the necessary permissions in your server: Send Messages, Embed Links, and Read Message History.

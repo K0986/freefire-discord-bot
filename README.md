@@ -4,7 +4,7 @@ A Discord bot that sends likes to Free Fire profiles using the Free Fire Like AP
 
 ## Features
 - Send likes to Free Fire profiles using the `!like` command
-- Beautiful embed messages with like count information
+- Beautiful embed messages with like count information and thumbnail images
 - Error handling and logging
 - Easy deployment on Railway
 
@@ -46,7 +46,7 @@ Once the bot is running, use the following command in your Discord server:
 Replace `<uid>` with the Free Fire player's UID you want to send likes to.
 
 ## Features
-- Embedded messages for better presentation
+- Embedded messages for better presentation with thumbnail images
 - Error handling and logging
 - Automatic reconnection on failure
 - Status updates for each request

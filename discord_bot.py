@@ -1,8 +1,8 @@
 import discord
 from discord.ext import commands
-import requests
 import os
 import logging
+import aiohttp
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -26,27 +26,29 @@ async def like(ctx, uid: str):
         # Send initial response
         await ctx.send(f"Processing like request for UID: {uid}...")
         
-        # Make API request
-        response = requests.get(f"{API_URL}?uid={uid}")
-        data = response.json()
-        
-        if response.status_code == 200:
-            # Create embed for better presentation
-            embed = discord.Embed(
-                title="Like Request Result",
-                color=discord.Color.green()
-            )
-            embed.add_field(name="Player", value=data.get("player", "Unknown"), inline=False)
-            embed.add_field(name="Likes Before", value=str(data.get("likes_before", "N/A")), inline=True)
-            embed.add_field(name="Likes After", value=str(data.get("likes_after", "N/A")), inline=True)
-            embed.add_field(name="Likes Added", value=str(data.get("likes_added", 0)), inline=True)
-            embed.set_footer(text=f"Server: {data.get('server_used', 'Unknown')}")
-            
-            await ctx.send(embed=embed)
-        else:
-            await ctx.send(f"❌ Failed to like UID {uid}. Error: {data.get('message', 'Unknown error')}")
-            
-    except requests.RequestException as e:
+        async with aiohttp.ClientSession() as session:
+            async with session.get(f"{API_URL}?uid={uid}", timeout=10) as response:
+                data = await response.json()
+                
+                if response.status == 200:
+                    # Create embed for better presentation
+                    embed = discord.Embed(
+                        title="Like Request Result",
+                        description="Your like has been sent successfully!",
+                        color=discord.Color.green()
+                    )
+                    embed.add_field(name="Player", value=data.get("player", "Unknown"), inline=False)
+                    embed.add_field(name="Likes Before", value=str(data.get("likes_before", "N/A")), inline=True)
+                    embed.add_field(name="Likes After", value=str(data.get("likes_after", "N/A")), inline=True)
+                    embed.add_field(name="Likes Added", value=str(data.get("likes_added", 0)), inline=True)
+                    embed.set_footer(text=f"Server: {data.get('server_used', 'Unknown')}")
+                    embed.set_thumbnail(url="https://images.pexels.com/photos/256381/pexels-photo-256381.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940")
+                    
+                    await ctx.send(embed=embed)
+                else:
+                    await ctx.send(f"❌ Failed to like UID {uid}. Error: {data.get('message', 'Unknown error')}")
+                    
+    except aiohttp.ClientError as e:
         logger.error(f"API request failed: {str(e)}")
         await ctx.send(f"❌ Failed to connect to the API. Please try again later.")
     except Exception as e:

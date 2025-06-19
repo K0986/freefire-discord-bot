@@ -30,27 +30,25 @@ async def like(ctx, uid: str):
                     await ctx.send(f"Failed to send like. API returned status {response.status}.")
                     return
                 data = await response.json()
+
                 status = data.get("status")
                 nickname = data.get("player", "Unknown")
                 before = data.get("likes_before", "?")
                 after = data.get("likes_after", "?")
                 added = data.get("likes_added", int(after) - int(before) if str(before).isdigit() and str(after).isdigit() else 0)
-                remaining = data.get("requests_left", "?")
-                limit = data.get("limit", "?")
-                server = data.get("server", "Unknown")
+                region = data.get("server_used", "Unknown")
+                uid_display = data.get("uid", uid)
 
                 if status == 1:
                     msg = (
                         f"┌  ACCOUNT\n"
                         f"├─ NICKNAME: {nickname}\n"
-                        f"├─ UID: {uid}\n"
+                        f"├─ UID: {uid_display}\n"
                         f"└─ RESULT:\n"
                         f"    ├─ ADDED: +{added}\n"
                         f"    ├─ BEFORE: {before}\n"
                         f"    └─ AFTER: {after}\n"
-                        f"┌  DAILY LIMIT\n"
-                        f"└─ Requests remaining: {remaining}/{limit}\n"
-                        f"SERVER USED: {server}"
+                        f"REGION: {region}"
                     )
                     await ctx.send(f"```{msg}```")
 
@@ -58,18 +56,19 @@ async def like(ctx, uid: str):
                     msg = (
                         f"┌  ACCOUNT\n"
                         f"├─ NICKNAME: {nickname}\n"
-                        f"├─ UID: {uid}\n"
+                        f"├─ UID: {uid_display}\n"
                         f"└─ RESULT:\n"
                         f"    ├─ ADDED: +0 (No new like)\n"
                         f"    ├─ TOTAL LIKES: {after}\n"
-                        f"    └─ STATUS: Already liked"
+                        f"    └─ STATUS: Already liked\n"
+                        f"REGION: {region}"
                     )
                     await ctx.send(f"```{msg}```")
 
                 else:
                     msg = (
                         f"┌  ERROR\n"
-                        f"├─ UID: {uid}\n"
+                        f"├─ UID: {uid_display}\n"
                         f"└─ MESSAGE: {data.get('message', 'Unknown error')}"
                     )
                     await ctx.send(f"```{msg}```")

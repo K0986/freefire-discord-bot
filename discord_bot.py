@@ -23,17 +23,33 @@ async def on_ready():
 @bot.command(name="like", help="Send a like to a Free Fire UID")
 async def like(ctx, uid: str):
     try:
+        request_url = f"{API_URL}?uid={uid}"
+        logger.info(f"Sending request to API URL: {request_url}")
         await ctx.send(f"Sending like to UID: {uid}...")
         async with aiohttp.ClientSession() as session:
-            async with session.get(f"{API_URL}?uid={uid}", timeout=10) as response:
+            async with session.get(request_url, timeout=10) as response:
                 if response.status != 200:
                     await ctx.send(f"Failed to send like. API returned status {response.status}.")
                     return
                 data = await response.json()
                 if data.get("status") == 1:
-                    await ctx.send(f"👍 Like sent successfully to player {data.get('player', 'Unknown')}! Likes before: {data.get('likes_before')}, Likes after: {data.get('likes_after')}.")
+                    embed = discord.Embed(
+                        title="👍 Like Sent Successfully!",
+                        description=f"Player: **{data.get('player', 'Unknown')}**",
+                        color=discord.Color.red()
+                    )
+                    embed.add_field(name="Likes Before", value=str(data.get('likes_before')), inline=True)
+                    embed.add_field(name="Likes After", value=str(data.get('likes_after')), inline=True)
+                    embed.set_footer(text=f"Server Used: {data.get('server_used', 'Unknown')}")
+                    await ctx.send(embed=embed)
                 elif data.get("status") == 2:
-                    await ctx.send(f"ℹ️ No new likes added. Player {data.get('player', 'Unknown')} already has {data.get('likes_after')} likes.")
+                    embed = discord.Embed(
+                        title="ℹ️ No New Likes Added",
+                        description=f"Player: **{data.get('player', 'Unknown')}** already has {data.get('likes_after')} likes.",
+                        color=discord.Color.blue()
+                    )
+                    embed.set_footer(text=f"Server Used: {data.get('server_used', 'Unknown')}")
+                    await ctx.send(embed=embed)
                 else:
                     await ctx.send(f"⚠️ Could not send like. Message: {data.get('message', 'Unknown error')}")
     except Exception as e:

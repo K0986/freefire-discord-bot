@@ -31,11 +31,31 @@ async def like(ctx, uid: str):
                     return
                 data = await response.json()
                 if data.get("status") == 1:
-                    await ctx.send(f"👍 Like sent successfully to player {data.get('player', 'Unknown')}! Likes before: {data.get('likes_before')}, Likes after: {data.get('likes_after')}.")
+                    added = data.get("likes_added", data.get("likes_after", 0) - data.get("likes_before", 0))
+                    remaining = data.get("requests_left", "?")
+                    limit = data.get("limit", "?")
+                    server = data.get("server", "Unknown")
+                    msg = (
+                        f"┌  ACCOUNT\n"
+                        f"├─ NICKNAME: {data.get('player', 'Unknown')}\n"
+                        f"├─ UID: {uid}\n"
+                        f"└─ RESULT:\n"
+                        f"    ├─ ADDED: +{added}\n"
+                        f"    ├─ BEFORE: {data.get('likes_before')}\n"
+                        f"    └─ AFTER: {data.get('likes_after')}\n"
+                        f"┌  DAILY LIMIT\n"
+                        f"└─ Requests remaining: {remaining}/{limit}\n"
+                        f"SERVER USED: {server}"
+                    )
+                    await ctx.send(f"```{msg}```")
                 elif data.get("status") == 2:
-                    await ctx.send(f"ℹ️ No new likes added. Player {data.get('player', 'Unknown')} already has {data.get('likes_after')} likes.")
+                    await ctx.send(
+                        f"ℹ️ No new likes added. Player {data.get('player', 'Unknown')} already has {data.get('likes_after')} likes."
+                    )
                 else:
-                    await ctx.send(f"⚠️ Could not send like. Message: {data.get('message', 'Unknown error')}")
+                    await ctx.send(
+                        f"⚠️ Could not send like. Message: {data.get('message', 'Unknown error')}"
+                    )
     except Exception as e:
         logger.error(f"Error in like command: {str(e)}")
         await ctx.send("❌ An error occurred while processing your request. Please try again later.")
